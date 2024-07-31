@@ -9,6 +9,7 @@ const Main = styled.main`
   display: flex;
   flex-direction: column;
   gap: 3.2rem;
+  overflow-y: auto;
 `;
 
 const StyledAppLayout = styled.div`

@@ -27,7 +27,7 @@ const sizes = (props) => {
 };
 
 const variations = (props) => {
-  switch (`${props.variaion}`.toLowerCase()) {
+  switch (`${props.variation}`.toLowerCase()) {
     default:
     case "primary":
       return css`
