@@ -1,5 +1,3 @@
-import styled from "styled-components";
-
 import Input from "../../ui/Input";
 import Form from "../../ui/Form";
 import Button from "../../ui/Button";
@@ -9,28 +7,41 @@ import { useForm } from "react-hook-form";
 import useCabins from "../../hooks/useCabins";
 import FormRow from "./../../ui/FormRow";
 
-function CreateCabinForm() {
-  const { register, handleSubmit, reset, getValues, formState } = useForm();
+function CreateCabinForm({ cabin, onSuccess, onError }) {
+  const { id, ...values } = cabin ?? {};
+  const edit_mode = !!id;
+  const { register, handleSubmit, reset, getValues, formState } = useForm({
+    defaultValues: edit_mode ? { ...values, image: "" } : {},
+  });
 
   const { errors } = formState;
 
-  const { creating, createCabin } = useCabins();
+  const { creating, createOrUpdateCabin } = useCabins();
 
   const onSubmitHandler = (data) => {
-    createCabin(
-      { ...data, image: data.image[0] },
+    createOrUpdateCabin(
+      {
+        ...data,
+        id: id ?? undefined,
+        image: data.image?.length ? data.image[0] : cabin?.image || "",
+      },
       {
         onSuccess: () => {
-          reset();
+          if (!edit_mode) {
+            reset();
+          }
+          if (onSuccess) {
+            onSuccess();
+          }
         },
       }
     );
   };
 
-  const onError = (err) => {};
+  const onErrorHandler = (err) => {};
 
   return (
-    <Form onSubmit={handleSubmit(onSubmitHandler, onError)}>
+    <Form onSubmit={handleSubmit(onSubmitHandler, onErrorHandler)}>
       <FormRow
         disabled={creating}
         label="Cabin name"
@@ -52,7 +63,7 @@ function CreateCabinForm() {
           type="number"
           id="maxCapacity"
           min={1}
-          {...register("max_capicity", {
+          {...register("max_capacity", {
             required: "This field is required",
             min: {
               value: 1,
@@ -117,7 +128,7 @@ function CreateCabinForm() {
           id="image"
           accept="image/*"
           {...register("image", {
-            required: "This field is required",
+            required: edit_mode ? false : "This field is required",
           })}
         />
       </FormRow>
@@ -128,7 +139,7 @@ function CreateCabinForm() {
           Cancel
         </Button>
         <Button type="submit" disabled={creating}>
-          Add cabin
+          {edit_mode ? "Save changes" : "Add cabin"}
         </Button>
       </FormRow>
     </Form>

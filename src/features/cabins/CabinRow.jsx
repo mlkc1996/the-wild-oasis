@@ -55,7 +55,11 @@ const CabinRow = ({ cabin }) => {
         <Cabin>{name}</Cabin>
         <div>Fits up to {max_capacity} guests</div>
         <Price>{formatCurrency(regular_price)}</Price>
-        <Discount>{formatCurrency(discount)}</Discount>
+        {discount ? (
+          <Discount>{formatCurrency(discount)}</Discount>
+        ) : (
+          <span>&mdash;</span>
+        )}
         <div>
           <button onClick={() => setShowForm((val) => !val)}>Edit</button>
           <button onClick={() => deleteCabin(id)} disabled={deleting}>
@@ -63,7 +67,14 @@ const CabinRow = ({ cabin }) => {
           </button>
         </div>
       </TableRow>
-      {showForm && <CreateCabinForm cabin={cabin} />}
+      {showForm && (
+        <CreateCabinForm
+          cabin={cabin}
+          onSuccess={() => {
+            setShowForm(false);
+          }}
+        />
+      )}
     </>
   );
 };

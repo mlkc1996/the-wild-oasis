@@ -8,7 +8,9 @@ export const getCabins = async () => {
     throw new Error(`Cabins could not be loaded.`);
   }
 
-  return cabins.map((cabin) => Object.assign(new Cabin(), cabin));
+  cabins.sort((a, b) => a.id - b.id);
+
+  return cabins;
 };
 export const deleteCabin = async (id) => {
   const { error } = await supabase.from("cabins").delete().eq("id", id);
@@ -18,15 +20,29 @@ export const deleteCabin = async (id) => {
   }
 };
 
-export const createCabin = async (cabin) => {
-  const { regular_price, max_capacity, discount, description, name, image } =
-    cabin;
-  const file_name = `${uuidv4()}.${/[^.]+$/.exec(image.name)}`;
-  const image_url = `${supabase_url}/storage/v1/object/public/canbin-images/${file_name}`;
+export const createOrUpdateCabin = async (cabin) => {
+  const {
+    id,
+    regular_price,
+    max_capacity,
+    discount,
+    description,
+    name,
+    image,
+  } = cabin;
 
-  const { data, error } = await supabase
-    .from("cabins")
-    .insert([
+  let image_url = image;
+  let file_name = "";
+
+  if (typeof image !== "string") {
+    file_name = `${uuidv4()}.${/[^.]+$/.exec(image.name)}`;
+    image_url = `${supabase_url}/storage/v1/object/public/canbin-images/${file_name}`;
+  }
+
+  let query = supabase.from("cabins");
+
+  if (!id) {
+    query = query.insert([
       {
         regular_price,
         max_capacity,
@@ -35,17 +51,32 @@ export const createCabin = async (cabin) => {
         name,
         image: image_url,
       },
-    ])
-    .select();
+    ]);
+  } else {
+    query = query.update(cabin).eq("id", id);
+  }
+
+  const { data, error } = await query.select().single();
 
   if (error) {
     console.error(error);
     throw new Error(`Cabin could not be created.`);
   }
 
-  await uploadImage(file_name, image);
+  if (file_name) {
+    try {
+      await uploadImage(file_name, image);
+    } catch (err) {
+      if (!id) {
+        await deleteCabin(data.id);
+      }
+      throw new Error(
+        "Cabin image could not be uploaded, and new cabin could not be added."
+      );
+    }
+  }
 
-  return Object.assign(new Cabin(), data);
+  return { ...data, updated: !!id };
 };
 
 const uploadImage = async (file_name, file) => {

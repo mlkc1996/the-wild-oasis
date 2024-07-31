@@ -1,5 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCabins, deleteCabin, createCabin } from "../services/apiCabins";
+import {
+  getCabins,
+  deleteCabin,
+  createOrUpdateCabin,
+} from "../services/apiCabins";
 import toast from "react-hot-toast";
 const queryKey = ["cabins"];
 
@@ -27,10 +31,14 @@ const useCabins = () => {
     },
   });
 
-  const { isLoading: creating, mutate: createCabinM } = useMutation({
-    mutationFn: createCabin,
-    onSuccess: () => {
-      toast.success("New cabin successfully created.");
+  const { isLoading: creating, mutate: createOrUpdateCabinM } = useMutation({
+    mutationFn: createOrUpdateCabin,
+    onSuccess: (data) => {
+      if (data?.updated) {
+        toast.success("Cabin successfully updated.");
+      } else {
+        toast.success("New cabin successfully created.");
+      }
       queryClient.invalidateQueries({
         queryKey,
       });
@@ -47,7 +55,7 @@ const useCabins = () => {
     deleting,
     deleteCabin: deleteCabinM,
     creating,
-    createCabin: createCabinM,
+    createOrUpdateCabin: createOrUpdateCabinM,
   };
 };
 
