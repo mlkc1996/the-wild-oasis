@@ -135,8 +135,16 @@ function CreateCabinForm({ cabin, onSuccess, onError }) {
 
       <FormRow>
         {/* type is an HTML attribute! */}
-        <Button variation="secondary" type="reset">
-          Cancel
+        <Button
+          variation="secondary"
+          type={edit_mode ? "button" : "reset"}
+          onClick={() => {
+            if (edit_mode) {
+              reset();
+            }
+          }}
+        >
+          {edit_mode ? "Reset" : "Cancel"}
         </Button>
         <Button type="submit" disabled={creating}>
           {edit_mode ? "Save changes" : "Add cabin"}
